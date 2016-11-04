@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="css/prism.css" rel="stylesheet" />
+        <link href="css/materialize.min.css" rel="stylesheet" />
+        <script src="js/prism.js"></script>
+        <script src="https://code.jquery.com/jquery-3.0.0.js"></script>
+        <script src="https://code.jquery.com/jquery-migrate-3.0.0.js"></script>
+        <script src="js/materialize.min.js"></script>
+        <style>
+            html {
+                font-family: sans-serif;
+            }
+            
+             body {
+                display: flex;
+                min-height: 100vh;
+                flex-direction: column;
+              }
+            
+              main {
+                flex: 1 0 auto;
+              }
+
+             
+            .brand-logo{
+                margin-left:15px;
+            }
+            
+            blockquote{
+                font-size:small;
+                border-left: 5px solid #0277bd; /* Just change the color value and that's it*/
+            }
+        </style>
+    </head>
+    <body>
+    <nav>
+    <div class="nav-wrapper grey darken-3">
+      <a href="#" class="brand-logo"><h5>Braintree ASP.NET VB Sample Code</h5></a>
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+          
+      </ul>
+    </div>
+    </nav>
+    <main>
+    <div class="container">
+    <div class="row">
+    <div class="col s2"></div>
+    <div class="col s8">
+        <ul class="collapsible" data-collapsible="accordion">
+          <li>
+            <div class="collapsible-header">Download .Net Library <span class="badge">Step 1</span></div>
+            <div class="collapsible-body">
+                
+                    <blockquote class="grey-text text-darken-1">
+                    Recommended to use Nuget</br>
+                    <a href="https://nuget.org/">NuGet</a> is a package manager for Visual Studio. To install the Braintree .NET Client Library, run the following command in the Package Manager 
+                    </blockquote>
+                    
+                <pre class="line-none">
+                    <code class="language-none">PM> Install-Package Braintree</code>
+                </pre>
+            </div>
+          </li>
+          <li>
+            <div class="collapsible-header"><span class="badge">Step 2</span>Configuration environment</div>
+            <div class="collapsible-body">
+                <blockquote class="grey-text text-darken-1">
+                    Replace the credential, Publickey, Privatekey & MerchandID to your own credentials.
+                    </br>Your could find the steps to obtain your credentials from <a href="https://articles.braintreepayments.com/control-panel/important-gateway-credentials#api-credentials">This Article</a> 
+                </blockquote>
+                    
+                <pre class="line-numbers">
+                    <code class="language-none">
+                        Dim gateway As New Braintree.BraintreeGateway
+                        
+                        With gateway
+                            .Environment = Braintree.Environment.SANDBOX
+                            .PublicKey = "Your PublicKey"
+                            .PrivateKey = "Your Privatekey"
+                            .MerchantId = "Your MerchantID"
+                        End With
+                    </code>
+                </pre>
+            </div>
+          </li>
+           <li>
+            <div class="collapsible-header"><span class="badge">Step 3</span>Generate Client Token</div>
+            <div class="collapsible-body">
+                <blockquote class="grey-text text-darken-1">
+                    Generate the Client Token & embed the client token to your Client Side integration.
+                </blockquote>
+                <pre class="line-numbers">
+                    <code class="language-none">
+                         Dim clientToken = gateway.ClientToken.generate()
+                    </code>
+                </pre>
+            </div>
+          </li>
+            <li>
+              <a href="https://developers.braintreepayments.com/start/hello-client/" target="_blank"><div class="collapsible-header blue-text text-darken-2"><span class="badge">Client Side</span>Receive a payment method nonce</div></a>
+            </li>
+           <li>
+            <div class="collapsible-header"><span class="badge">Step 4</span>Create a Transaction (Autorization)</div>
+            <div class="collapsible-body">
+                <blockquote class="grey-text text-darken-1">
+                    If you only want to Authorize the Payment (Hold the Payment from the customer), without capture the fund
+                </blockquote>
+                <pre class="line-numbers">
+                    <code class="language-none">
+                        Dim transactionRequest As New TransactionRequest
+                
+                        With transactionRequest
+                            .Amount = 100D
+                            .PaymentMethodNonce = "fake-valid-nonce"
+                        End With
+                        
+                        Dim result As Result(Of Transaction) = gateway.Transaction.Sale(transactionRequest)
+                        
+                        If (result.IsSuccess()) Then
+                        
+                            Dim TransactionID = result.Target.Id 
+                        
+                        
+                        End If
+                    </code>
+                </pre>
+                
+                <blockquote class="grey-text text-darken-1">
+                    Use SubmitForSettlement to capture the Payment Separately, after authorized the transaction.
+                </blockquote>
+                
+                <pre class="line-numbers">
+                    <code class="language-none">
+                        Dim result As Result(Of Transaction) = gateway.Transaction.SubmitForSettlement("TransactionID")
+                        
+                         If (result.IsSuccess()) Then
+                            Dim TransactionID = result.Target.Id 
+                        
+                        End If
+                      </code>
+                </pre>
+            </div>
+          </li>
+           <li>
+            <div class="collapsible-header blue-text text-darken-2">OR</div>
+            
+          </li>
+          <li>
+            <div class="collapsible-header"><span class="badge">Step 4</span>Create a Transaction with Submit for Settlement (Autorization & Capture)</div>
+            <div class="collapsible-body">
+                 
+                <blockquote class="grey-text text-darken-1">
+                    Add <span class="grey darken-3 red-text text-lighten-2"><i>SubmitForSettlement = True</i></span>, to capture the payment once the payment is authorized. 
+                </blockquote>
+                
+                <pre class="line-numbers">
+                    <code class="language-none">
+                        Dim transactionRequest As New TransactionRequest
+                
+                        With transactionRequest
+                            .Amount = 100D
+                            .PaymentMethodNonce = "fake-valid-nonce"
+                            .Options = New TransactionOptionsRequest With {
+                                .SubmitForSettlement = True
+                            }
+                        
+                        End With
+                        
+                        Dim result As Result(Of Transaction) = gateway.Transaction.Sale(transactionRequest)
+                        
+                        If (result.IsSuccess()) Then
+                        
+                            Dim TransactionID = result.Target.Id 
+                        
+                        End If
+                    </code>
+                </pre>
+            </div>
+          </li>
+          
+        </ul>
+        
+    </div>
+    </div>
+    </div>
+    </main>
+    
+    
+    <div class="col s2"></div>
+    
+     <footer class="page-footer  grey darken-3">
+          <div class="container">
+            <div class="row">
+              <div class="col l6 s12">
+                <h5 class="white-text">Noted:</h5>
+                <p class="grey-text text-lighten-4">These documentation is just for your references, I'd strongly recommend using one of the languages that we provide examples in for our integrations - it is possible that using other languages will result in unresolvable errors in the future that we will not be able to assist with.
+</p>
+              </div>
+              <div class="col l4 offset-l2 s12">
+              <!--  <h5 class="white-text">Links</h5>
+                <ul>
+                  <li><a class="grey-text text-lighten-3" href="#!">Link 1</a></li>
+                  <li><a class="grey-text text-lighten-3" href="#!">Link 2</a></li>
+                  <li><a class="grey-text text-lighten-3" href="#!">Link 3</a></li>
+                  <li><a class="grey-text text-lighten-3" href="#!">Link 4</a></li>
+                </ul>
+                -->
+              </div>
+            </div>
+          </div>
+          <div class="footer-copyright">
+            <div class="container">
+            <!--© 2016 Copyright Text
+            <a class="grey-text text-lighten-4 right" href="#!">More Links</a>-->
+            </div>
+          </div>
+        </footer>
+    </body>
+</html>
